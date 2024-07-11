@@ -23,7 +23,7 @@ def parse_args():
     parser = argparse.ArgumentParser(
         description='mmseg test (and eval) a model')
     parser.add_argument('config', help='test config file path')
-    parser.add_argument('checkpoint', help='checkpoint file')
+    parser.add_argument('checkpoint',default=None, help='checkpoint file')
     parser.add_argument(
         '--work-dir',
         help=('if specified, the evaluation metric results will be dumped'
@@ -180,22 +180,52 @@ def main():
     # build the model and load checkpoint
     cfg.model.train_cfg = None
     model = build_segmentor(cfg.model, test_cfg=cfg.get('test_cfg'))
-    fp16_cfg = cfg.get('fp16', None)
-    if fp16_cfg is not None:
-        wrap_fp16_model(model)
-    checkpoint = load_checkpoint(model, args.checkpoint, map_location='cpu')
-    if 'CLASSES' in checkpoint.get('meta', {}):
-        model.CLASSES = checkpoint['meta']['CLASSES']
-    else:
-        print('"CLASSES" not found in meta, use dataset.CLASSES instead')
-        model.CLASSES = dataset.CLASSES
-    if 'PALETTE' in checkpoint.get('meta', {}):
-        model.PALETTE = checkpoint['meta']['PALETTE']
-    else:
-        print('"PALETTE" not found in meta, use dataset.PALETTE instead')
-        model.PALETTE = dataset.PALETTE
+    # fp16_cfg = cfg.get('fp16', None)
+    # if fp16_cfg is not None:
+    #     wrap_fp16_model(model)
+    # if args.checkpoint != None:
+    #     checkpoint = load_checkpoint(model, args.checkpoint, map_location='cpu')
+    checkpoint = None 
+    model.CLASSES = dataset.CLASSES
+    model.PALETTE = dataset.PALETTE
+    # if 'CLASSES' in checkpoint.get('meta', {}):
+    #     model.CLASSES = checkpoint['meta']['CLASSES']
+    # else:
+    #     print('"CLASSES" not found in meta, use dataset.CLASSES instead')
+    #     model.CLASSES = dataset.CLASSES
+    # if 'PALETTE' in checkpoint.get('meta', {}):
+    #     model.PALETTE = checkpoint['meta']['PALETTE']
+    # else:
+    #     print('"PALETTE" not found in meta, use dataset.PALETTE instead')
+    #     model.PALETTE = dataset.PALETTE
 
     # clean gpu memory when starting a new evaluation.
+    state_dict = torch.load('/scratch/bcgp/michal5/checkpoints/dinov2_vitg14_ade20k_m2f.pth')
+    requires_grad = [name for name,param in model.named_parameters() if param.requires_grad]
+
+    #print(state_dict['state_dict'].keys())
+    # for k in state_dict['state_dict'].keys():
+    #     print(k,'two')
+    names = ['backbone.spm','backbone.spm.stem','backbone.spm.conv', 'backbone.interactions','decode_head']
+
+    for name in model.state_dict():
+        #print(name)
+        #print(name.startswith(n),name in state_dict['state_dict'].keys())
+        if 'spm' in name or 'interactions' in name or 'decode_head' in name or name in requires_grad:
+        #if name.startswith(n) and name in state_dict['state_dict'].keys():
+            # print(name)
+            if name in state_dict['state_dict'].keys():
+                # print(name)
+                del state_dict['state_dict'][name]
+    #print(state_dict['state_dict'].keys())
+    # for key in state_dict['state_dict'].keys():
+    #     if key in model.state_dict().keys():
+    #         print(key)
+    # for k in state_dict['state_dict'].keys():
+    #     if k in model.state_dict().keys():
+    #         print(k)     
+    model.load_state_dict(state_dict['state_dict'],strict=False)
+
     torch.cuda.empty_cache()
     eval_kwargs = {} if args.eval_options is None else args.eval_options
 

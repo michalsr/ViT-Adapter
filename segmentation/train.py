@@ -76,6 +76,7 @@ def parse_args():
         default='none',
         help='job launcher')
     parser.add_argument('--local_rank', type=int, default=0)
+    parser.add_argument('--no_load_dino',action='store_true')
     parser.add_argument(
         '--auto-resume',
         action='store_true',
@@ -137,6 +138,9 @@ def main():
 
     cfg.device = 'cuda'  # fix 'ConfigDict' object has no attribute 'device'
     # create work_dir
+    #cfg.work_dir = '/scratch/bcgp/michal5/ViT-Adapter/output/full_train'
+    cfg.model.pretrained = None
+
     mmcv.mkdir_or_exist(osp.abspath(cfg.work_dir))
     # dump config
     cfg.dump(osp.join(cfg.work_dir, osp.basename(args.config)))
@@ -174,7 +178,19 @@ def main():
         train_cfg=cfg.get('train_cfg'),
         test_cfg=cfg.get('test_cfg'))
     model.init_weights()
+    if not args.no_load_dino:
+        logger.info('Loading dino backbone weights')
+        state_dict = torch.load('/scratch/bcgp/michal5/checkpoints/dinov2_vitg14_ade20k_m2f.pth')
+        requires_grad = [name for name,param in model.named_parameters() if param.requires_grad]
+        names = ['backbone.spm','backbone.spm.stem','backbone.spm.conv', 'backbone.interactions','decode_head']
 
+        for name in model.state_dict():
+            if 'spm' in name or 'interactions' in name or 'decode_head' in name or name in requires_grad:
+                if name in state_dict['state_dict'].keys():
+                    del state_dict['state_dict'][name]
+        model.load_state_dict(state_dict['state_dict'],strict=False)
+    else:
+        logger.warning('Training from scratch')
     # SyncBN is not support for DP
     if not distributed:
         warnings.warn(
@@ -207,7 +223,7 @@ def main():
         datasets,
         cfg,
         distributed=distributed,
-        validate=(not args.no_validate),
+        validate=(True),
         timestamp=timestamp,
         meta=meta)
 

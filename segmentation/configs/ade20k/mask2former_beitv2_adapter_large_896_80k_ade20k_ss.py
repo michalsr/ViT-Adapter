@@ -7,10 +7,13 @@ _base_ = [
 ]
 crop_size = (896, 896)
 # pretrained = 'https://conversationhub.blob.core.windows.net/beit-share-public/beitv2/beitv2_large_patch16_224_pt1k_ft21k.pth'
-pretrained = 'pretrained/beitv2_large_patch16_224_pt1k_ft21k.pth'
+#pretrained = 'pretrained/beitv2_large_patch16_224_pt1k_ft21k.pth'
+pretrained = '/scratch/bcgp/michal5/ViT-Adapter/segmentation/mmseg_custom/pretrained/beit_large_patch16_224_pt22k_ft22k.pth'
+#pretrained = '/scratch/bcgp/michal5/ViT-Adapter/segmentation/mmseg_custom/pretrained/mask2former_beit_adapter_large_896_80k_cocostuff164k.pth.tar'
 # please download the coco-stuff pre-trained model
 # load_from = 'https://github.com/czczup/ViT-Adapter/releases/download/v0.3.1/mask2former_beitv2_adapter_large_896_80k_cocostuff164k.zip'
-load_from = 'pretrained/mask2former_beitv2_adapter_large_896_80k_cocostuff164k.pth'
+#load_from = 'pretrained/mask2former_beitv2_adapter_large_896_80k_cocostuff164k.pth'
+load_from = '/scratch/bcgp/michal5/ViT-Adapter/segmentation/mmseg_custom/pretrained/mask2former_beit_adapter_large_896_80k_cocostuff164k.pth.tar'
 model = dict(
     type='EncoderDecoderMask2Former',
     pretrained=pretrained,
@@ -147,7 +150,7 @@ lr_config = dict(_delete_=True,
                  warmup_iters=1500,
                  warmup_ratio=1e-6,
                  power=1.0, min_lr=0.0, by_epoch=False)
-data = dict(samples_per_gpu=1,
+data = dict(samples_per_gpu=2,
             train=dict(pipeline=train_pipeline),
             val=dict(pipeline=test_pipeline),
             test=dict(pipeline=test_pipeline))

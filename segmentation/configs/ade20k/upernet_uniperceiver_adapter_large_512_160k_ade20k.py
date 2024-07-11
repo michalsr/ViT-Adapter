@@ -3,7 +3,7 @@ _base_ = [
     '../_base_/models/upernet_r50.py', '../_base_/datasets/ade20k.py',
     '../_base_/default_runtime.py', '../_base_/schedules/schedule_160k.py'
 ]
-pretrained = 'pretrained/uni-perceiver-large-L24-H1024-224size-pretrained_converted.pth'
+pretrained = '/scratch/bcgp/michal5/ViT-Adapter/segmentation/mmseg_custom/pretrained/uni-perceiver-large-L24-H1024-224size-pretrained_converted.pth'
 model = dict(
     pretrained=pretrained,
     backbone=dict(

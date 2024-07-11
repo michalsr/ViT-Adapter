@@ -1,0 +1,9 @@
+*.pth
+*.pt 
+output/*
+segmentation/model_output*
+mmseg_custom/pretrained 
+*.tar
+*.zip
+__pycache__ 
+wandb
