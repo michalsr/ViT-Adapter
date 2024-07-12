@@ -7,7 +7,7 @@ model = dict(
     pretrained='',
     # '/scratch/bcgp/michal5/checkpoints/dinov2_vitg14_ade20k_m2f.pth',
     backbone=dict(
-        type='ViTAdapter',
+        type='ViTAdapter', 
         patch_size=14,
         embed_dim=1536,
         depth=40,
@@ -276,7 +276,7 @@ data = dict(
                 flip=False,
                 transforms=[
                     dict(type='Resize', keep_ratio=True),
-                    dict(type='ResizeToMultiple', size_divisor=14),
+                    dict(type='ResizeToMultiple', size_divisor=32),
                     dict(type='RandomFlip'),
                     dict(
                         type='Normalize',
@@ -292,7 +292,8 @@ log_config = dict(
                         dict(type='WandbLoggerHook',
                      init_kwargs={
                          'entity': "michalsr",
-                         'project': "Mask2Former+DINO"
+                         'project': "Mask2Former+DINO",
+                         'name':"ade20k_160k"
                      },
                      interval=50,
                     by_epoch=False,
@@ -320,13 +321,13 @@ lr_config = dict(
     power=1.0,
     min_lr=0.0,
     by_epoch=False)
-runner = dict(type='IterBasedRunner', max_iters=40000)
+runner = dict(type='IterBasedRunner', max_iters=160000)
 checkpoint_config = dict(by_epoch=False, interval=1000, max_keep_ckpts=1)
 evaluation = dict(
     interval=4000, metric='mIoU', pre_eval=True, save_best='mIoU')
 res = 512
 pretrained = '/scratch/bcgp/michal5/checkpoints/dinov2_vitg14_ade20k_m2f.pth'
 fp16 = False
-work_dir = ''
+work_dir = '/scratch/bcgp/michal5/ViT-Adapter/segmentation/model_output/ade20K/full_train_160k'
 gpu_ids = range(0, 1)
 auto_resume = True
